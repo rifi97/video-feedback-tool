@@ -53,8 +53,8 @@ class FocusableAVPlayerView: AVPlayerView {
     }
     
     override func keyDown(with event: NSEvent) {
-        // 스페이스바 (키코드 49)
-        if event.keyCode == 49 {
+        switch event.keyCode {
+        case 49: // 스페이스바
             if let player = self.player {
                 if player.timeControlStatus == .playing {
                     player.pause()
@@ -62,7 +62,17 @@ class FocusableAVPlayerView: AVPlayerView {
                     player.play()
                 }
             }
-        } else {
+        case 123: // 왼쪽 화살표
+            if let player = self.player, let currentItem = player.currentItem {
+                player.pause()
+                currentItem.step(byCount: -1)
+            }
+        case 124: // 오른쪽 화살표
+            if let player = self.player, let currentItem = player.currentItem {
+                player.pause()
+                currentItem.step(byCount: 1)
+            }
+        default:
             super.keyDown(with: event)
         }
     }

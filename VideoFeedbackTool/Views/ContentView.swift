@@ -39,15 +39,6 @@ struct ContentView: View {
             icon: "checkmark.circle.fill"
         )
         .frame(minWidth: 900, minHeight: 600)
-        // 키보드 단축키: 좌우 화살표로 프레임 이동
-        .onKeyPress(.leftArrow) {
-            videoViewModel.stepBackward()
-            return .handled
-        }
-        .onKeyPress(.rightArrow) {
-            videoViewModel.stepForward()
-            return .handled
-        }
     }
 }
 
