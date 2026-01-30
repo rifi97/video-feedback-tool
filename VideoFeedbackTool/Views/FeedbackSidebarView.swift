@@ -11,6 +11,7 @@ import SwiftUI
 struct FeedbackSidebarView: View {
     @ObservedObject var feedbackViewModel: FeedbackViewModel
     @ObservedObject var videoViewModel: VideoPlayerViewModel
+    var isInputFocused: FocusState<Bool>.Binding
     
     @State private var inputText: String = ""
     
@@ -131,7 +132,7 @@ struct FeedbackSidebarView: View {
     
     // MARK: - Input View
     private var inputView: some View {
-        FeedbackInputView(text: $inputText) {
+        FeedbackInputView(text: $inputText, isFocused: isInputFocused) {
             let currentTime = videoViewModel.getCurrentTime()
             feedbackViewModel.addFeedback(text: inputText, at: currentTime)
             inputText = ""
@@ -140,9 +141,4 @@ struct FeedbackSidebarView: View {
     }
 }
 
-#Preview {
-    FeedbackSidebarView(
-        feedbackViewModel: FeedbackViewModel(),
-        videoViewModel: VideoPlayerViewModel()
-    )
-}
+// Preview disabled - requires FocusState binding

@@ -11,19 +11,26 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var videoViewModel = VideoPlayerViewModel()
     @ObservedObject var feedbackViewModel: FeedbackViewModel
+    @FocusState private var isInputFocused: Bool
     
     var body: some View {
         HStack(spacing: 0) {
             // 왼쪽: 비디오 플레이어
             VideoPlayerView(viewModel: videoViewModel)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    // 비디오 영역 클릭 시 텍스트 필드 포커스 해제
+                    isInputFocused = false
+                }
             
             Divider()
             
             // 오른쪽: 피드백 사이드바
             FeedbackSidebarView(
                 feedbackViewModel: feedbackViewModel,
-                videoViewModel: videoViewModel
+                videoViewModel: videoViewModel,
+                isInputFocused: $isInputFocused
             )
         }
         .toast(
@@ -47,4 +54,5 @@ struct ContentView: View {
 #Preview {
     ContentView(feedbackViewModel: FeedbackViewModel())
 }
+
 

@@ -10,9 +10,8 @@ import SwiftUI
 /// 피드백 입력 뷰
 struct FeedbackInputView: View {
     @Binding var text: String
+    var isFocused: FocusState<Bool>.Binding
     let onSubmit: () -> Void
-    
-    @FocusState private var isFocused: Bool
     
     var body: some View {
         HStack(spacing: 10) {
@@ -26,7 +25,7 @@ struct FeedbackInputView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.secondary.opacity(0.1))
                 )
-                .focused($isFocused)
+                .focused(isFocused)
                 .onSubmit {
                     submitFeedback()
                 }
@@ -60,10 +59,5 @@ struct FeedbackInputView: View {
     }
 }
 
-#Preview {
-    FeedbackInputView(text: .constant("테스트 피드백")) {
-        print("Submitted!")
-    }
-    .padding()
-    .frame(width: 300)
-}
+// Preview disabled - requires FocusState binding
+
