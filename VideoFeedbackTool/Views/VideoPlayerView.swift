@@ -13,9 +13,32 @@ import UniformTypeIdentifiers
 class FocusableAVPlayerView: AVPlayerView {
     override var acceptsFirstResponder: Bool { true }
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // 뷰가 윈도우에 추가되면 즉시 포커스 획득
+        DispatchQueue.main.async { [weak self] in
+            self?.window?.makeFirstResponder(self)
+        }
+    }
+    
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
         window?.makeFirstResponder(self)
+    }
+    
+    override func keyDown(with event: NSEvent) {
+        // 스페이스바 (키코드 49)
+        if event.keyCode == 49 {
+            if let player = self.player {
+                if player.timeControlStatus == .playing {
+                    player.pause()
+                } else {
+                    player.play()
+                }
+            }
+        } else {
+            super.keyDown(with: event)
+        }
     }
 }
 
