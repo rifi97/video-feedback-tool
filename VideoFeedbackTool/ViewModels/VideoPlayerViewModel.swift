@@ -97,4 +97,18 @@ class VideoPlayerViewModel: ObservableObject {
         guard let player = player else { return 0 }
         return CMTimeGetSeconds(player.currentTime())
     }
+    
+    /// 한 프레임 앞으로 이동
+    func stepForward() {
+        guard let player = player, let currentItem = player.currentItem else { return }
+        player.pause()
+        currentItem.step(byCount: 1)
+    }
+    
+    /// 한 프레임 뒤로 이동
+    func stepBackward() {
+        guard let player = player, let currentItem = player.currentItem else { return }
+        player.pause()
+        currentItem.step(byCount: -1)
+    }
 }

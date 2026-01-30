@@ -10,7 +10,7 @@ import SwiftUI
 /// 메인 콘텐츠 뷰
 struct ContentView: View {
     @StateObject private var videoViewModel = VideoPlayerViewModel()
-    @StateObject private var feedbackViewModel = FeedbackViewModel()
+    @ObservedObject var feedbackViewModel: FeedbackViewModel
     
     var body: some View {
         HStack(spacing: 0) {
@@ -32,9 +32,19 @@ struct ContentView: View {
             icon: "checkmark.circle.fill"
         )
         .frame(minWidth: 900, minHeight: 600)
+        // 키보드 단축키: 좌우 화살표로 프레임 이동
+        .onKeyPress(.leftArrow) {
+            videoViewModel.stepBackward()
+            return .handled
+        }
+        .onKeyPress(.rightArrow) {
+            videoViewModel.stepForward()
+            return .handled
+        }
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(feedbackViewModel: FeedbackViewModel())
 }
+
