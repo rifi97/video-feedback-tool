@@ -9,19 +9,29 @@ import SwiftUI
 import AVKit
 import UniformTypeIdentifiers
 
+/// 클릭 시 포커스를 받는 커스텀 AVPlayerView
+class FocusableAVPlayerView: AVPlayerView {
+    override var acceptsFirstResponder: Bool { true }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        window?.makeFirstResponder(self)
+    }
+}
+
 /// AVPlayerView 래퍼 (호버 시 어두워지는 효과 없음)
 struct NativeVideoPlayerView: NSViewRepresentable {
     let player: AVPlayer
     
-    func makeNSView(context: Context) -> AVPlayerView {
-        let playerView = AVPlayerView()
+    func makeNSView(context: Context) -> FocusableAVPlayerView {
+        let playerView = FocusableAVPlayerView()
         playerView.player = player
         playerView.controlsStyle = .floating
         playerView.showsFullScreenToggleButton = true
         return playerView
     }
     
-    func updateNSView(_ nsView: AVPlayerView, context: Context) {
+    func updateNSView(_ nsView: FocusableAVPlayerView, context: Context) {
         nsView.player = player
     }
 }
