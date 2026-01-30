@@ -11,6 +11,8 @@ import UniformTypeIdentifiers
 
 /// 클릭 시 포커스를 받는 커스텀 AVPlayerView
 class FocusableAVPlayerView: AVPlayerView {
+    private var trackingArea: NSTrackingArea?
+    
     override var acceptsFirstResponder: Bool { true }
     
     override func viewDidMoveToWindow() {
@@ -19,6 +21,30 @@ class FocusableAVPlayerView: AVPlayerView {
         DispatchQueue.main.async { [weak self] in
             self?.window?.makeFirstResponder(self)
         }
+    }
+    
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        
+        // 기존 tracking area 제거
+        if let existingArea = trackingArea {
+            removeTrackingArea(existingArea)
+        }
+        
+        // 새 tracking area 추가 (마우스 진입 감지)
+        trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea!)
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        // 마우스가 영역에 들어오면 포커스 획득
+        window?.makeFirstResponder(self)
     }
     
     override func mouseDown(with event: NSEvent) {
