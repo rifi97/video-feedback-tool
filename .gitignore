@@ -3,3 +3,5 @@
 .codegraph/
 DerivedData/
 *.dmg
+*.xcuserstate
+xcuserdata/
