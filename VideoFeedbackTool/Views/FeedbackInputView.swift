@@ -14,11 +14,12 @@ struct FeedbackInputView: View {
     let onSubmit: () -> Void
     
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .bottom, spacing: 10) {
             // 텍스트 입력 필드
-            TextField("피드백을 입력하세요...", text: $text)
+            TextField("피드백을 입력하세요...", text: $text, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
+                .lineLimit(1 ... 6)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
@@ -60,4 +61,3 @@ struct FeedbackInputView: View {
 }
 
 // Preview disabled - requires FocusState binding
-

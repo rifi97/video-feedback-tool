@@ -12,16 +12,17 @@ struct ContentView: View {
     @StateObject private var videoViewModel = VideoPlayerViewModel()
     @ObservedObject var feedbackViewModel: FeedbackViewModel
     @FocusState private var isInputFocused: Bool
+    @State private var videoFocusRequest: Int = 0
     
     var body: some View {
         HStack(spacing: 0) {
             // 왼쪽: 비디오 플레이어
-            VideoPlayerView(viewModel: videoViewModel)
+            VideoPlayerView(viewModel: videoViewModel, focusRequest: videoFocusRequest)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     // 비디오 영역 클릭 시 텍스트 필드 포커스 해제
-                    isInputFocused = false
+                    focusVideoPlayer()
                 }
             
             Divider()
@@ -30,20 +31,24 @@ struct ContentView: View {
             FeedbackSidebarView(
                 feedbackViewModel: feedbackViewModel,
                 videoViewModel: videoViewModel,
-                isInputFocused: $isInputFocused
+                isInputFocused: $isInputFocused,
+                onVideoFocusRequested: focusVideoPlayer
             )
         }
         .toast(
             isShowing: $feedbackViewModel.showCopiedAlert,
-            message: "클립보드에 복사되었습니다!",
-            icon: "checkmark.circle.fill"
+            message: feedbackViewModel.toastMessage,
+            icon: feedbackViewModel.toastIcon
         )
         .frame(minWidth: 900, minHeight: 600)
+    }
+    
+    private func focusVideoPlayer() {
+        isInputFocused = false
+        videoFocusRequest += 1
     }
 }
 
 #Preview {
     ContentView(feedbackViewModel: FeedbackViewModel())
 }
-
-

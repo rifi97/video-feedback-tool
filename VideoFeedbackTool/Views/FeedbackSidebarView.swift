@@ -12,6 +12,7 @@ struct FeedbackSidebarView: View {
     @ObservedObject var feedbackViewModel: FeedbackViewModel
     @ObservedObject var videoViewModel: VideoPlayerViewModel
     var isInputFocused: FocusState<Bool>.Binding
+    let onVideoFocusRequested: () -> Void
     
     @State private var inputText: String = ""
     
@@ -55,6 +56,17 @@ struct FeedbackSidebarView: View {
                 .buttonStyle(.plain)
                 .help("모든 피드백 삭제")
             }
+            
+            // 불러오기 버튼
+            Button(action: {
+                feedbackViewModel.importFromClipboard()
+            }) {
+                Image(systemName: "square.and.arrow.down")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.accentColor)
+            }
+            .buttonStyle(.plain)
+            .help("클립보드의 노션 피드백 불러오기")
             
             // 내보내기 버튼
             Button(action: {
@@ -104,6 +116,7 @@ struct FeedbackSidebarView: View {
                                     onTap: {
                                         // 해당 타임스탬프로 이동
                                         videoViewModel.seek(to: item.timestamp)
+                                        onVideoFocusRequested()
                                     },
                                     onDelete: {
                                         withAnimation(.easeInOut(duration: 0.2)) {
@@ -136,6 +149,8 @@ struct FeedbackSidebarView: View {
             let currentTime = videoViewModel.getCurrentTime()
             feedbackViewModel.addFeedback(text: inputText, at: currentTime)
             inputText = ""
+            isInputFocused.wrappedValue = false
+            onVideoFocusRequested()
         }
         .padding(12)
     }

@@ -11,41 +11,7 @@ import UniformTypeIdentifiers
 
 /// 클릭 시 포커스를 받는 커스텀 AVPlayerView
 class FocusableAVPlayerView: AVPlayerView {
-    private var trackingArea: NSTrackingArea?
-    
     override var acceptsFirstResponder: Bool { true }
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        // 뷰가 윈도우에 추가되면 즉시 포커스 획득
-        DispatchQueue.main.async { [weak self] in
-            self?.window?.makeFirstResponder(self)
-        }
-    }
-    
-    override func updateTrackingAreas() {
-        super.updateTrackingAreas()
-        
-        // 기존 tracking area 제거
-        if let existingArea = trackingArea {
-            removeTrackingArea(existingArea)
-        }
-        
-        // 새 tracking area 추가 (마우스 진입 감지)
-        trackingArea = NSTrackingArea(
-            rect: bounds,
-            options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
-            owner: self,
-            userInfo: nil
-        )
-        addTrackingArea(trackingArea!)
-    }
-    
-    override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-        // 마우스가 영역에 들어오면 포커스 획득
-        window?.makeFirstResponder(self)
-    }
     
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
@@ -53,53 +19,109 @@ class FocusableAVPlayerView: AVPlayerView {
     }
     
     override func keyDown(with event: NSEvent) {
+        if shouldHandlePlaybackShortcut(event),
+           handlePlaybackKey(event) {
+            return
+        }
+        
+        super.keyDown(with: event)
+    }
+    
+    func focusForPlayback() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.window?.makeFirstResponder(self)
+        }
+    }
+
+    private func shouldHandlePlaybackShortcut(_ event: NSEvent) -> Bool {
+        let reservedModifiers: NSEvent.ModifierFlags = [.command, .option, .control]
+        guard event.modifierFlags.intersection(reservedModifiers).isEmpty else {
+            return false
+        }
+        
+        return [49, 123, 124].contains(event.keyCode)
+    }
+
+    private func handlePlaybackKey(_ event: NSEvent) -> Bool {
         switch event.keyCode {
         case 49: // 스페이스바
-            if let player = self.player {
-                if player.timeControlStatus == .playing {
-                    player.pause()
-                } else {
-                    player.play()
-                }
+            guard let player = self.player else { return false }
+            
+            if player.timeControlStatus == .playing {
+                player.pause()
+            } else {
+                player.play()
             }
+            focusForPlayback()
+            return true
         case 123: // 왼쪽 화살표
-            if let player = self.player, let currentItem = player.currentItem {
-                player.pause()
-                currentItem.step(byCount: -1)
-            }
+            stepFrame(by: -frameStepCount(for: event))
+            focusForPlayback()
+            return true
         case 124: // 오른쪽 화살표
-            if let player = self.player, let currentItem = player.currentItem {
-                player.pause()
-                currentItem.step(byCount: 1)
-            }
+            stepFrame(by: frameStepCount(for: event))
+            focusForPlayback()
+            return true
         default:
-            super.keyDown(with: event)
+            return false
         }
+    }
+    
+    private func frameStepCount(for event: NSEvent) -> Int {
+        event.modifierFlags.contains(.shift) ? 10 : 1
+    }
+    
+    private func stepFrame(by count: Int) {
+        guard let player, let currentItem = player.currentItem else { return }
+        player.pause()
+        currentItem.step(byCount: count)
     }
 }
 
 /// AVPlayerView 래퍼 (호버 시 어두워지는 효과 없음)
 struct NativeVideoPlayerView: NSViewRepresentable {
     let player: AVPlayer
+    let focusRequest: Int
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
     
     func makeNSView(context: Context) -> FocusableAVPlayerView {
         let playerView = FocusableAVPlayerView()
         playerView.player = player
         playerView.controlsStyle = .floating
         playerView.showsFullScreenToggleButton = true
+        context.coordinator.lastFocusRequest = focusRequest
         return playerView
     }
     
     func updateNSView(_ nsView: FocusableAVPlayerView, context: Context) {
         nsView.player = player
+        
+        if context.coordinator.lastFocusRequest != focusRequest {
+            context.coordinator.lastFocusRequest = focusRequest
+            nsView.focusForPlayback()
+        }
+    }
+    
+    class Coordinator {
+        var lastFocusRequest: Int?
     }
 }
 
 /// 비디오 플레이어 뷰
 struct VideoPlayerView: View {
     @ObservedObject var viewModel: VideoPlayerViewModel
+    let focusRequest: Int
     @State private var isHovering: Bool = false
     @State private var isDragOver: Bool = false
+    
+    init(viewModel: VideoPlayerViewModel, focusRequest: Int = 0) {
+        self.viewModel = viewModel
+        self.focusRequest = focusRequest
+    }
     
     var body: some View {
         ZStack {
@@ -108,7 +130,7 @@ struct VideoPlayerView: View {
             
             if viewModel.isVideoLoaded, let player = viewModel.player {
                 // 비디오 플레이어 (호버 시 어두워지지 않음)
-                NativeVideoPlayerView(player: player)
+                NativeVideoPlayerView(player: player, focusRequest: focusRequest)
             } else {
                 // 파일 열기 버튼
                 VStack(spacing: 20) {
